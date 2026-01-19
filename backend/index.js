@@ -12,7 +12,7 @@ import { app, server } from "./src/lib/socket.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
-const __dirname = path.resolve();
+const ROOT_DIR = path.resolve(); // root folder of project
 
 // middlewares
 app.use(express.json());
@@ -22,29 +22,32 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? true
+        ? true // allow any origin in production
         : "http://localhost:5173",
     credentials: true,
   })
 );
 
-// routes
+// API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-// serve frontend in production
+// Serve frontend in production
 if (process.env.NODE_ENV === "production") {
-  const distPath = path.join(__dirname, "frontend", "dist");
+  // Correct path to dist folder
+  const distPath = path.join(ROOT_DIR, "frontend", "dist");
 
   app.use(express.static(distPath));
 
-  // ✅ FIXED: catch-all middleware (NO "*")
+  // Catch-all middleware for SPA routing
   app.use((req, res) => {
     res.sendFile(path.join(distPath, "index.html"));
   });
 }
 
-server.listen(PORT, () => {
+// Start server + connect DB
+server.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
-  connectDB();
+  await connectDB();
 });
+
